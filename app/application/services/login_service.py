@@ -1,13 +1,13 @@
 # app/application/services/login_service.py
 
-from app.domain.interfaces.i_crud import ICRUDE
+from app.domain.interfaces.i_auth import IAuth
 from app.infrastructure.repositories.user_repository import UserRepository # Importamos la implementación
 from typing import Dict, Any, List, Optional
 
 # Nota: En un sistema real, usarías una librería de hashing como 'bcrypt'
 # y un servicio de tokens como 'PyJWT' aquí.
 
-class LoginService(ICRUDE):
+class LoginService(IAuth):
     """
     Clase que implementa la lógica de inicio de sesión de usuarios (Historia B-14).
     Implementa el método 'login' del contrato ICRUDE.
@@ -47,24 +47,3 @@ class LoginService(ICRUDE):
             }
         else:
             return {"status": "error", "message": "Credenciales inválidas (contraseña incorrecta)"}
-
-
-    # MÉTODOS NO IMPLEMENTADOS (Fuera de Alcance de Login)
-    
-
-    # Los métodos CRUD base se implementan, pero no tienen lógica útil en LoginService
-    def add(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        raise NotImplementedError("LoginService solo implementa 'login'. Use RegisterService para 'add'.")
-    
-    def query(self, query_params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        raise NotImplementedError("LoginService no implementa consultas.")
-
-    def update(self, key: Any, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        raise NotImplementedError("LoginService no implementa actualización.")
-
-    def delete(self, key: Any) -> bool:
-        raise NotImplementedError("LoginService no implementa eliminación.")
-
-    # El método update_status de ICRUDE no aplica aquí
-    def update_status(self, key: Any, new_status: str) -> Dict[str, Any]:
-        raise NotImplementedError("LoginService no implementa actualización de estado.")

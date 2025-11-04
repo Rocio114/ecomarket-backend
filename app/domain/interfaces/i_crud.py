@@ -35,10 +35,6 @@ class ICRUDAR(ICRUD):
 
 # Interfaz ICRUDE (Añade métodos específicos - Usada por Login y Pedidos (cliente))
 class ICRUDE(ICRUD):
-    @abstractmethod
-    def login(self, email: str, password: str) -> Dict[str, Any]:
-        """Método específico para Login (Autenticación)."""
-        pass
 
     @abstractmethod
     def update_status(self, key: Any, new_status: str) -> Dict[str, Any]:
