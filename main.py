@@ -66,7 +66,7 @@ def run_full_integration_test():
     
     # 3a. Registro (Intentamos, si ya existe, no importa)
     register_result = register_service.add({"email": TEST_EMAIL, "password": TEST_PASSWORD, "nombre": "Rocío Ecomarket"})
-    print(f"Resultado Registro: {register_result['status']} | Mensaje: {register_result['message']}")
+    print(f"Resultado Registro: {register_result['status']} | Mensaje: {register_result.get('message', 'Registro Exitoso')}")
     
     # 3b. Login (Obtenemos el ID del usuario, si existe)
     login_result = login_service.login(TEST_EMAIL, TEST_PASSWORD)
