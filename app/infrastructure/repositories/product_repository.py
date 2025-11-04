@@ -19,9 +19,9 @@ class ProductRepository(IRepository[Product]):
         if self.collection.count_documents({}) == 0:
             print("[INFRA - MONGO] Inicializando datos de productos...")
             products_data = [
-                {"nombre": "Laptop Gamer X", "descripcion": "Potente para juegos y trabajo.", "precio": 1200.00, "stock": 5, "estado": "activo"},
-                {"nombre": "Teclado Mecánico RGB", "descripcion": "Switches rápidos y duraderos.", "precio": 85.50, "stock": 0, "estado": "activo"},
-                {"nombre": "Monitor Curvo 27''", "descripcion": "144Hz, ideal para diseño.", "precio": 350.00, "stock": 10, "estado": "activo"},
+                {"nombre": "Laptop Gamer X", "descripcion": "Potente para juegos y trabajo.", "precio_float": 1200.00, "stock": 5, "estado": "activo"},
+                {"nombre": "Teclado Mecánico RGB", "descripcion": "Switches rápidos y duraderos.", "precio_float": 85.50, "stock": 0, "estado": "activo"},
+                {"nombre": "Monitor Curvo 27''", "descripcion": "144Hz, ideal para diseño.", "precio_float": 350.00, "stock": 10, "estado": "activo"},
             ]
             self.collection.insert_many(products_data)
 
