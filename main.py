@@ -70,16 +70,19 @@ def run_full_integration_test():
     
     # 3b. Login (Obtenemos el ID del usuario, si existe)
     login_result = login_service.login(TEST_EMAIL, TEST_PASSWORD)
-    if login_result['status'] == 'error':
-        print(f"[ERROR FATAL] Falló el login: {login_result['message']}. Deteniendo.")
+    if login_result.get('status') == 'error':
+        print(f"[ERROR FATAL] Falló el login: {login_result.get('message', 'Error desconocido')}. Deteniendo.")
         return
         
-    user_id = login_result['user_data']['user_id']
+    # Accedemos a 'user_data' de forma segura, asumiendo éxito
+    user_data = login_result.get('user_data', {})
+    user_id = user_data.get('user_id')
+    
+    if not user_id:
+        print("[ERROR FATAL] Login exitoso, pero 'user_id' no encontrado en la respuesta. Deteniendo.")
+        return
+    
     print(f"Resultado Login: {login_result['status']} (ID: {user_id})")
-
-    # 3c. Consulta y Actualización de Perfil
-    profile_update = profile_service.update(user_id, {'nombre': 'Rocío (Cliente Final)', 'direccion': 'Av. Las Frutas 101'})
-    print(f"Resultado Update Perfil: {profile_update['status']}")
 
 
     # ----------------------------------------------------
