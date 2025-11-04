@@ -3,7 +3,7 @@
 from app.domain.interfaces.i_crud import ICRUD
 from app.domain.interfaces.i_repository import IRepository
 from app.domain.entities.user import User
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 # Simulamos la dependencia del Repositorio de Usuarios
 # Nota: La inyección de dependencia es clave en esta arquitectura
