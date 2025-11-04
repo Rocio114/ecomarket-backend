@@ -1,5 +1,5 @@
 # main.py
-# Archivo de demostración de la arquitectura de backend COMPLETA
+# Archivo de demostración de la arquitectura de backend COMPLETA y CORREGIDA.
 
 from app.infrastructure.repositories.user_repository import UserRepository
 from app.infrastructure.repositories.product_repository import ProductRepository
@@ -9,7 +9,6 @@ from app.infrastructure.repositories.order_repository import OrderRepository
 from app.application.services.register_service import RegisterService
 from app.application.services.login_service import LoginService
 from app.application.services.catalogue_service import CatalogueService
-from app.application.services.product_admin_service import ProductAdminService # Importado pero no usado
 from app.application.services.shopping_cart import ShoppingCartService
 from app.application.services.payment_service import PaymentService
 from app.application.services.order_service import OrderService
@@ -19,12 +18,17 @@ from app.application.services.invoice_service import InvoiceService, EmailAdapte
 
 import json
 
+# Datos de prueba consistentes
+TEST_EMAIL = "cliente_ecomarket_final@test.cl"
+TEST_PASSWORD = "password_seguro_123"
+
+
 def run_full_integration_test():
     """
     Simula el flujo completo de un cliente y la administración para validar toda la arquitectura.
     """
     print("\n" + "="*80)
-    print("      INICIANDO TEST DE INTEGRACIÓN DEL BACKEND COMPLETO CON MONGODB")
+    print("      INICIANDO TEST DE INTEGRACIÓN FINAL CON MONGO Y ECOMARKET")
     print("="*80 + "\n")
 
     # ----------------------------------------------------
@@ -44,7 +48,7 @@ def run_full_integration_test():
         return
     
     # ----------------------------------------------------
-    # FASE 2: INICIALIZACIÓN DE SERVICIOS (Inyección de Dependencias)
+    # FASE 2: INICIALIZACIÓN DE SERVICIOS
     # ----------------------------------------------------
     register_service = RegisterService(user_repository=user_repo)
     login_service = LoginService(user_repository=user_repo)
@@ -55,73 +59,64 @@ def run_full_integration_test():
     invoice_service = InvoiceService(email_adapter)
     dashboard_service = DashboardService(product_repo, order_repo, user_repo)
     
-    print("\n[OK] Todos los componentes inicializados y dependencias inyectadas.\n")
-
     # ----------------------------------------------------
-    # FASE 3: FLUJO DEL CLIENTE (REGISTRO, LOGIN Y PERFIL)
+    # FASE 3: FLUJO DEL CLIENTE (REGISTRO Y LOGIN)
     # ----------------------------------------------------
-    print("--- 3. FLUJO DE AUTENTICACIÓN Y PERFIL ---")
+    print("\n--- 3. FLUJO DE AUTENTICACIÓN Y PERFIL ---")
     
-    # Registro de Cliente
-    new_user_data = {"email": "cliente_test@ecomarket.cl", "password": "pass_seguro_123", "nombre": "Cliente Test"}
-    register_result = register_service.add(new_user_data)
+    # 3a. Registro (Intentamos, si ya existe, no importa)
+    register_result = register_service.add({"email": TEST_EMAIL, "password": TEST_PASSWORD, "nombre": "Rocío Ecomarket"})
+    print(f"Resultado Registro: {register_result['status']} | Mensaje: {register_result['message']}")
     
-    # El ID es el ObjectId de MongoDB, lo usamos como string
-    user_id = register_result.get('user_id') 
-    
-    if register_result['status'] == 'error' and 'ya existe' not in register_result['message']:
-        print(f"Resultado Registro: {register_result['status']} | {register_result['message']}. Deteniendo.")
+    # 3b. Login (Obtenemos el ID del usuario, si existe)
+    login_result = login_service.login(TEST_EMAIL, TEST_PASSWORD)
+    if login_result['status'] == 'error':
+        print(f"[ERROR FATAL] Falló el login: {login_result['message']}. Deteniendo.")
         return
+        
+    user_id = login_result['user_data']['user_id']
+    print(f"Resultado Login: {login_result['status']} (ID: {user_id})")
 
-    print(f"Resultado Registro: {register_result['status']} (ID: {user_id})")
-
-    # Login
-    login_result = login_service.login("cliente_test@ecomarket.cl", "pass_seguro_123")
-    print(f"Resultado Login: {login_result['status']}")
-    
-    # Consulta y Actualización de Perfil
-    profile_query = profile_service.query({'user_id': user_id})
-    print(f"Perfil Antes: {profile_query['profile'].get('nombre')}")
-    
-    update_data = {'nombre': 'Cliente Actualizado', 'direccion': 'Calle Falsa 123'}
-    profile_update = profile_service.update(user_id, update_data)
-    print(f"Resultado Update Perfil: {profile_update['status']}\n")
+    # 3c. Consulta y Actualización de Perfil
+    profile_update = profile_service.update(user_id, {'nombre': 'Rocío (Cliente Final)', 'direccion': 'Av. Las Frutas 101'})
+    print(f"Resultado Update Perfil: {profile_update['status']}")
 
 
     # ----------------------------------------------------
     # FASE 4: FLUJO DE COMPRA (CATÁLOGO Y CARRITO)
     # ----------------------------------------------------
-    print("--- 4. FLUJO DE COMPRA ---")
+    print("\n--- 4. FLUJO DE COMPRA ---")
     
-    # Consulta de Catálogo (ICRUDAR)
+    # Consulta de Catálogo
     catalogue = catalogue_service.query()
     print(f"Productos Activos en Catálogo: {len(catalogue)}")
     
-    if not catalogue:
-        print("[AVISO] No hay productos en catálogo. Posiblemente falló la inicialización.")
+    if len(catalogue) < 2:
+        print("[AVISO] No hay suficientes productos (Se requieren 2). Falló la inicialización.")
         return
 
-    # Usamos los IDs reales de MongoDB de los productos inicializados
-    laptop_id = catalogue[0]['product_id']  # Primer producto (Laptop)
-    monitor_id = catalogue[2]['product_id'] # Tercer producto (Monitor)
+    # Usamos los dos primeros productos disponibles de la lista
+    product_item_1_id = catalogue[0]['product_id'] 
+    product_item_2_id = catalogue[1]['product_id']
+
+    print(f"Productos Seleccionados (Manzana/Tomate IDs): {product_item_1_id}, {product_item_2_id}")
+
+    # Añadir al Carrito (Manzana y Tomate)
+    cart_service.add({'user_id': user_id, 'product_id': product_item_1_id, 'quantity': 5}) # 5 unidades
+    cart_service.add({'user_id': user_id, 'product_id': product_item_2_id, 'quantity': 2}) # 2 unidades
     
-    # Añadir al Carrito (Laptop y Monitor)
-    cart_add_1 = cart_service.add({'user_id': user_id, 'product_id': laptop_id, 'quantity': 1})
-    cart_add_2 = cart_service.add({'user_id': user_id, 'product_id': monitor_id, 'quantity': 2})
-    
-    # Consulta del Carrito (FIX: Manejo del KeyError)
+    # Consulta del Carrito (Manejo de errores del Key 'items')
     cart_view = cart_service.query({'user_id': user_id})
 
-    # ESTE ES EL BLOQUE CORREGIDO: Manejo del error de consulta del carrito
-    if cart_view.get('status') == 'error' or cart_view.get('status') == 'empty' or not isinstance(cart_view, dict):
-        print(f"[ERROR CARRITO] Falló la consulta del carrito: {cart_view.get('message', 'Respuesta inesperada')}. Deteniendo.")
+    if cart_view.get('status') == 'error':
+        print(f"[ERROR CARRITO] Falló la consulta: {cart_view.get('message', 'Respuesta inesperada')}. Deteniendo.")
         return
-    else:
-        print(f"Carrito Actualizado: Ítems: {len(cart_view['items'])} | Total: ${cart_view['total']}")
+    
+    print(f"Carrito Actualizado: Ítems: {len(cart_view['items'])} | Total: ${cart_view['total']}")
         
-    # Stock antes del checkout (Consultamos el producto nuevamente)
-    laptop_stock_before = product_repo.get_by_id(laptop_id).stock
-    print(f"Stock Laptop antes de pagar: {laptop_stock_before}")
+    # Stock antes del checkout (Manzana Roja)
+    item_1_stock_before = product_repo.get_by_id(product_item_1_id).stock
+    print(f"Stock Manzana Roja antes de pagar: {item_1_stock_before}")
 
     # ----------------------------------------------------
     # FASE 5: CHECKOUT COMPLETO (PAGO, PEDIDO, STOCK, BOLETA)
@@ -130,27 +125,26 @@ def run_full_integration_test():
     
     checkout_data = {
         "user_id": user_id,
-        "card_data": {"card_number": "1111222233334444", "cvv": "123"}, # Pago Exitoso
-        "shipping_address": "Calle Falsa 123 - Cliente Actualizado"
+        "card_data": {"card_number": "1111222233334444", "cvv": "123"}, 
+        "shipping_address": "Av. Las Frutas 101"
     }
 
-    # Proceso de Checkout (Llama a Pago, Orden, Stock)
+    # Proceso de Checkout (Llama a Pago, Orden, Stock, Limpia Carrito)
     checkout_result = order_service.add(checkout_data)
     order_id = checkout_result.get('order_id')
-    print(f"Resultado Checkout: {checkout_result['status']} | Pedido ID: {order_id}")
+    print(f"Resultado Checkout: {checkout_result['status']} | Pedido ID: {order_id} | Total: ${checkout_result.get('total')}")
     
-    # Verificación de ID de Pedido para el resto del flujo
     if checkout_result['status'] == 'error':
         print(f"[ERROR CHECKOUT] El checkout falló. Deteniendo.")
         return
 
     # 5a. Reducción de Stock (Verificación)
-    laptop_stock_after = product_repo.get_by_id(laptop_id).stock
-    print(f"Stock Laptop después de pagar: {laptop_stock_after} (Debería ser {laptop_stock_before - 1})")
+    item_1_stock_after = product_repo.get_by_id(product_item_1_id).stock
+    print(f"Stock Manzana Roja después de pagar: {item_1_stock_after} (Debería ser {item_1_stock_before - 5})")
     
     # 5b. Envío de Boleta (Notificación)
     final_order = order_repo.get_by_id(order_id)
-    invoice_result = invoice_service.generate_and_send(final_order, "cliente_test@ecomarket.cl")
+    invoice_result = invoice_service.generate_and_send(final_order, TEST_EMAIL)
     print(f"Resultado Envío Boleta: {invoice_result['status']}")
 
     # ----------------------------------------------------
@@ -158,20 +152,20 @@ def run_full_integration_test():
     # ----------------------------------------------------
     print("\n--- 6. FLUJO ADMINISTRATIVO Y DASHBOARD ---")
     
-    # 6a. Actualización de Estado de Pedido (ICRUDE - Admin)
-    status_update = order_service.update_status(order_id, "enviado")
+    # 6a. Actualización de Estado de Pedido 
+    status_update = order_service.update_status(order_id, "entregado")
     print(f"Resultado Update Estado: {status_update['status']} -> {status_update.get('new_status')}")
 
-    # 6b. Consulta del Dashboard (ICRUDAR - Reporte)
+    # 6b. Consulta del Dashboard (Reporte)
     dashboard_report = dashboard_service.query()
     
     print("\n--- REPORTE FINAL DEL DASHBOARD ---")
-    print(f"Ingreso Total: ${dashboard_report['metrics']['total_revenue']}")
-    print(f"Órdenes Pagadas/Enviadas: {dashboard_report['metrics']['total_orders_processed']}")
+    print(f"Ingreso Total (por el pedido actual): ${dashboard_report['metrics']['total_revenue']:.2f}")
+    print(f"Órdenes Procesadas: {dashboard_report['metrics']['total_orders_processed']}")
     print(f"Distribución de Órdenes: {dashboard_report['orders_breakdown']}")
     
     print("\n" + "="*80)
-    print("                     TEST DE INTEGRACIÓN FINALIZADO CON ÉXITO")
+    print("                 ¡TEST DE INTEGRACIÓN COMPLETADO CON ÉXITO!")
     print("================================================================================\n")
 
 

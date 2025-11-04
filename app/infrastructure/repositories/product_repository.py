@@ -17,17 +17,18 @@ class ProductRepository(IRepository[Product]):
     def _initialize_data(self):
         """ Inicializa datos de prueba si la colección está vacía. """
         
-        # Opcional: LIMPIEZA TEMPORAL para asegurar que no queden campos 'precio' viejos
-        # Puedes eliminar esta línea después de la primera ejecución exitosa
+        # Opcional: LIMPIEZA TEMPORAL si aún no la has borrado
         # self.collection.delete_many({}) 
         
         if self.collection.count_documents({}) == 0:
-            print("[INFRA - MONGO] Inicializando datos de productos con nombres de campos correctos...")
+            print("[INFRA - MONGO] Inicializando datos de ECOMARKET (Frutas y Verduras)...")
             products_data = [
-                # ¡CORREGIDO! Usando 'precio_float'
-                {"nombre": "Laptop Gamer X", "descripcion": "Potente para juegos y trabajo.", "precio_float": 1200.00, "stock": 5, "estado": "activo", "categoria": "Electrónica"}, 
-                {"nombre": "Teclado Mecánico RGB", "descripcion": "Switches rápidos y duraderos.", "precio_float": 85.50, "stock": 20, "estado": "activo", "categoria": "Accesorios"},
-                {"nombre": "Monitor Curvo 27''", "descripcion": "144Hz, ideal para diseño.", "precio_float": 350.00, "stock": 10, "estado": "activo", "categoria": "Electrónica"},
+                # Producto 1 (Frutas)
+                {"nombre": "Manzana Roja", "descripcion": "Manzanas frescas, perfectas para comer.", "precio_float": 1.50, "stock": 50, "estado": "activo", "categoria": "Frutas"}, 
+                # Producto 2 (Verduras)
+                {"nombre": "Tomate Larga Vida", "descripcion": "Tomates maduros para ensaladas.", "precio_float": 0.75, "stock": 120, "estado": "activo", "categoria": "Verduras"},
+                # Producto 3 (Frutas)
+                {"nombre": "Plátano Orgánico", "descripcion": "Plátanos de Ecuador, altos en potasio.", "precio_float": 0.90, "stock": 80, "estado": "activo", "categoria": "Frutas"},
             ]
             self.collection.insert_many(products_data)
 
